@@ -12,46 +12,73 @@ import MessagesInput from "./components/MessagesInput";
 import MessagesListSkeleton from "./components/MessagesListSkeleton";
 import MessagesNoPerson from "./components/MessagesNoPerson";
 import Message from "./components/Message";
+import { useState } from "react";
 
 interface MessagesProps {
   selectedPerson?: PersonType;
 }
 
 const Messages = ({ selectedPerson }: MessagesProps) => {
+  const { data } = useQuery(GET_MESSAGES_QUERY, {
+    skip: !selectedPerson,
+    variables: { personId: selectedPerson?.id },
+  });
+  console.log(data);
+  const messages = data?.messages;
+
+  console.log(data);
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-1 overflow-y-auto">
-        {/* TODO: If a person is not selected, show <MessagesNoPerson /> ... */}
+        {selectedPerson ? (
+          <MessagesList messages={messages} selectedPerson={selectedPerson} />
+        ) : (
+          <MessagesNoPerson />
+        )}
 
         {/* TODO: If a person is selected, show <MessagesList /> ... */}
       </div>
       <div className="h-20 p-4">
-        {/* TODO: If a person is selected, show <MessagesForm /> ... */}
+        {selectedPerson ? <MessagesForm/> : ''}
       </div>
     </div>
   );
 };
 
-interface MessagesListProps {}
+interface MessagesListProps {
+  messages: MessageType[];
+  selectedPerson: PersonType;
+}
 
 /** A component render a list of conversations with a single person. */
-const MessagesList = ({}: MessagesListProps) => {
+const MessagesList = ({ messages, selectedPerson }: MessagesListProps) => {
   // TODO: If the list is empty, show <MessagesEmpty /> ...
 
   return (
     <div className="p-4 pb-0 flex flex-col mt-auto w-full gap-4">
-      {/* TODO: Show a list of messages, using the <Message /> component ... */}
-
-      {/* Dummy node representing the end of the message list */}
+      {messages?.length ? (
+        messages.map((message) => (
+          <Message
+            key={message.id}
+            self={message.sender.self} 
+            body={message.body}
+            timestamp={message.timestamp}
+          />
+        ))
+      ) : (
+        <MessagesEmpty person={selectedPerson} />
+      )}
       <div />
     </div>
   );
 };
 
-interface MessagesFormProps {}
+interface MessagesFormProps {
+  recipientId: string
+}
 
 /** Provides a form for sending a message to the currently selected person */
-const MessagesForm = ({}: MessagesFormProps) => {
+const MessagesForm = ({recipientId}: MessagesFormProps) => {
   return (
     <form className="flex gap-2">
       {/* TODO: Use <MessagesInput /> component for the message body ... */}
